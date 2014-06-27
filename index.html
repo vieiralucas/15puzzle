@@ -1,3 +1,11 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>15 Puzzle</title>
+	<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+</head>
+<body>	
 <canvas id="15-puzzle"></canvas>
 <script>
 	window.onload = function() {
@@ -9,74 +17,196 @@
 		canvas.height = H;
 		var tileWidth = W/4, tileHeight = H/5;
 		ctx.font = tileHeight/2 + 'px Helvetica';
+		var gameOver, rights;
 
-		var tiles = {
-			tiles: [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15]],
-			rightTiles: [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 0]],
-			draw: function() {
-				var x = 0, y = 0;
-				ctx.strokeStyle = "#FFF";
+		function Tile(i, j, w, h, v) {
+			this.i = i;
+			this.j = j;
+			this.x = i * w;
+			this.y = j * h;
+			this.w = w;
+			this.h = h;
+			this.v = v;
+			this.rightTiles = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 0]];
+		}
+		Tile.prototype.change = function(i, j) {
+			this.i = i;
+			this.j = j;
+			this.x = i * this.w;
+			this.y = j * this.h;
+		}
+		Tile.prototype.contains = function(x, y) {
+			return x > this.x && x < this.x + this.w && y > this.y && y < this.y + this.h;
+		};
+		Tile.prototype.draw = function() {
+			if(this.v !== 0) {
+				ctx.strokeStyle = "#F0F";
 				var tile, width, height, posX, posY;
-				for (var i = 0; i < this.tiles.length; i++) {
-					for (var j = 0; j < this.tiles[0].length; j++) {
-						tile = this.tiles[i][j];
-						if(tile[0] !== 0){
-							width = ctx.measureText(tile).width;
-							height = tileHeight/2;
-							posX = x * tileWidth + (tileWidth - width)/2;
-							posY = y * tileHeight + tileHeight - (height/2);
-							var fillStyle;
-							tile[0] === this.rightTiles[i][j] ? fillStyle = "#0F0": fillStyle = "#FFF";
-							ctx.fillStyle = fillStyle;
-							ctx.fillText(this.tiles[i][j], posX, posY);
-							ctx.beginPath();
-							ctx.rect(x * tileWidth, y * tileHeight, tileWidth, tileHeight);
-							ctx.stroke();
-						}
-						x++;
-					}	
-					x = 0;
-					y++;
+				width = ctx.measureText(this.v).width;
+				height = this.h/2;
+				posX = this.x + (this.w - width)/2;
+				posY = this.y + this.h - (height/2);
+				var fillStyle;
+				if(this.isRight()) {
+					fillStyle = "#0F0";
+					rights++;
+				}else {
+					fillStyle = "#FFF";
+				}
+				ctx.fillStyle = fillStyle;
+				ctx.fillText(this.v, posX, posY);
+				ctx.beginPath();
+				ctx.rect(this.x, this.y, this.w, this.h);
+				ctx.stroke();
+			} else {
+				ctx.fillStyle = "#876";
+				ctx.fillRect(this.x, this.y, this.w, this.h);
+			}
+		};
+		Tile.prototype.isRight = function() {
+			return this.v === this.rightTiles[this.j][this.i];
+		};
+
+		var numbers = {
+			tilesObjects: [],
+			tiles: [[15, 14, 13, 12], [11, 10, 9, 8], [7, 6, 5, 4], [3, 1, 2, 0]],
+			rightTiles: [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 0]],
+			init: function() {
+				for (var i = 0; i < 4; i++) {
+					var aux = [];
+					for (var j = 0; j < 4; j++) {
+						aux.push(new Tile(i, j, tileWidth, tileHeight, this.tiles[j][i]))
+					}
+					this.tilesObjects.push(aux);
 				}
 			},
-			randomize: function() {
-				var aux = [];
-				for (var i = 0; i < this.tiles.length; i++) {
-					for (var j = 0; j < this.tiles[0].length; j++) {
-						aux.push(this.tiles[i][j]);
+			reset: function() {
+				this.tilesObjects = [];
+				this.init();
+			},
+			draw: function() {
+				for (var i = 0; i < this.tilesObjects.length; i++) {
+					for (var j = 0; j < this.tilesObjects[0].length; j++) {
+						this.tilesObjects[i][j].draw();
 					}
 				}
-				aux = shuffle(aux);
-				for (var i = 0; i < this.tiles.length; i++) {
-					for (var j = 0; j < this.tiles[0].length; j++) {
-						this.tiles[i][j] = aux[j+i*4];
+			},
+			handleClick: function(x, y) {
+				for (var i = 0; i < this.tilesObjects.length; i++) {
+					for (var j = 0; j < this.tilesObjects[0].length; j++) {
+						var tile = this.tilesObjects[i][j];
+						if(this.tilesObjects[i][j].contains(x, y)) {
+							if(i + 1 < this.tilesObjects.length) {
+								if(this.tilesObjects[i + 1][j].v === 0) {
+									//troca com direita
+									//troca os i's j's
+									var aux = {
+										i: this.tilesObjects[i][j].i, 
+										j: this.tilesObjects[i][j].j
+									};
+									this.tilesObjects[i][j].change(this.tilesObjects[i + 1][j].i, this.tilesObjects[i + 1][j].j);
+									this.tilesObjects[i + 1][j].change(aux.i, aux.j);
+									//troca no array localizado em numbers
+									aux = this.tilesObjects[i][j];
+									this.tilesObjects[i][j] = this.tilesObjects[i + 1][j];
+									this.tilesObjects[i + 1][j] = aux;
+									console.log('direita');
+									return true;
+								}
+							}
+							if(i - 1 >= 0 ) {
+								if(this.tilesObjects[i - 1][j].v === 0) {
+									//troca com de esquerda
+									var aux = {
+										i: this.tilesObjects[i][j].i, 
+										j: this.tilesObjects[i][j].j
+									};
+									this.tilesObjects[i][j].change(this.tilesObjects[i - 1][j].i, this.tilesObjects[i - 1][j].j);
+									this.tilesObjects[i - 1][j].change(aux.i, aux.j);
+									//troca no array localizado em numbers
+									aux = this.tilesObjects[i][j];
+									this.tilesObjects[i][j] = this.tilesObjects[i - 1][j];
+									this.tilesObjects[i - 1][j] = aux;
+									console.log('esquerda');
+									return true;
+								}
+							}
+							if(j + 1 < this.tilesObjects[0].length) {
+								if(this.tilesObjects[i][j + 1].v === 0) {
+									//troca com baixo
+									var aux = {
+										i: this.tilesObjects[i][j].i, 
+										j: this.tilesObjects[i][j].j
+									};
+									this.tilesObjects[i][j].change(this.tilesObjects[i][j + 1].i, this.tilesObjects[i][j + 1].j);
+									this.tilesObjects[i][j + 1].change(aux.i, aux.j);
+									//troca no array localizado em numbers
+									aux = this.tilesObjects[i][j];
+									this.tilesObjects[i][j] = this.tilesObjects[i][j + 1];
+									this.tilesObjects[i][j + 1] = aux;
+									console.log('baixo');
+									return true;
+								}
+							}
+							if(j - 1 >= 0) {
+								if(this.tilesObjects[i][j - 1].v === 0) {
+									//troca com cima
+									var aux = {
+										i: this.tilesObjects[i][j].i, 
+										j: this.tilesObjects[i][j].j
+									};
+									this.tilesObjects[i][j].change(this.tilesObjects[i][j - 1].i, this.tilesObjects[i][j - 1].j);
+									this.tilesObjects[i][j - 1].change(aux.i, aux.j);
+									//troca no array localizado em numbers
+									aux = this.tilesObjects[i][j];
+									this.tilesObjects[i][j] = this.tilesObjects[i][j - 1];
+									this.tilesObjects[i][j - 1] = aux;
+									console.log('cima');
+									return true;
+								}
+							}
+						}
 					}
 				}
 			}
 		}
+		var restartBox = {
+			x: 0,
+			y: tileHeight * 4,
+			w: tileWidth * 2.5,
+			h: tileHeight,
+			contains: function(x, y) {
+				return x > this.x && x < this.x + this.w && y > this.y && y < this.y + this.h;
+			}
+		}
 
 		function init() {
-			tiles.randomize();
+			gameOver = false;
+			rights = 0;
+			numbers.init();
 			frames = 0, time = 0;
 			run();
 		}
 		function run() {
-			frames++;
 			update();
 			draw();
 			window.requestAnimationFrame(run, canvas);
 		}
 		function update() {
+			if(rights === 15) {
+				gameOver = true;
+			}
+			frames++;
 			if(frames % 60 === 0) {
 				if(time < 999){
-					time++;
+					gameOver ? time = time : time++;
 				}
 			}
-			console.log(time);
+			rights = 0;
 		}
 		function draw() {
 			drawBackground();
-			tiles.draw();
+			numbers.draw();
 		}
 		function drawBackground() {
 			ctx.fillStyle = "#000";
@@ -108,17 +238,34 @@
 			var height = tileHeight/2;
 			var textX = tileWidth * 2.5 + (tileWidth * 1.5 - width)/2;
 			var textY = tileHeight * 5 - (height/2);
-			ctx.fillStyle = "#000";
+			var style;
+			gameOver ? style = "#F00" : "#000"; 
+			ctx.fillStyle = style;
 			ctx.fillText(time, textX, textY);	
 		}
 		init();
-		function shuffle(array) {
-			var s = [];
-			while (array.length) 
-				s.push(array.splice(Math.random() * array.length, 1));
-			while (s.length) 
-				array.push(s.pop());
-			return array;
+		canvas.addEventListener('touchstart', touchStart);
+		canvas.addEventListener('click', click);
+		function click(evt) {
+			handleClick(evt.clientX, evt.clientY);
+		}
+		function touchStart(evt) {
+			handleClick(evt.changedTouches[0].pageX, evt.changedTouches[0].pageY);
+		}
+		function handleClick(x, y) {
+			if(!numbers.handleClick(x, y)){
+				if(restartBox.contains(x, y)) {
+					restart();
+				}
+			}
+		}
+		function restart() {
+			gameOver = false;
+			frames = 0;
+			time = 0;
+			numbers.reset();
 		}
 	}
 </script>
+</body>
+</html>
