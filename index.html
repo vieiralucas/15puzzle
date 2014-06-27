@@ -110,7 +110,6 @@
 									aux = this.tilesObjects[i][j];
 									this.tilesObjects[i][j] = this.tilesObjects[i + 1][j];
 									this.tilesObjects[i + 1][j] = aux;
-									console.log('direita');
 									return true;
 								}
 							}
@@ -127,7 +126,6 @@
 									aux = this.tilesObjects[i][j];
 									this.tilesObjects[i][j] = this.tilesObjects[i - 1][j];
 									this.tilesObjects[i - 1][j] = aux;
-									console.log('esquerda');
 									return true;
 								}
 							}
@@ -144,7 +142,6 @@
 									aux = this.tilesObjects[i][j];
 									this.tilesObjects[i][j] = this.tilesObjects[i][j + 1];
 									this.tilesObjects[i][j + 1] = aux;
-									console.log('baixo');
 									return true;
 								}
 							}
@@ -161,7 +158,6 @@
 									aux = this.tilesObjects[i][j];
 									this.tilesObjects[i][j] = this.tilesObjects[i][j - 1];
 									this.tilesObjects[i][j - 1] = aux;
-									console.log('cima');
 									return true;
 								}
 							}
@@ -247,10 +243,10 @@
 		canvas.addEventListener('touchstart', touchStart);
 		canvas.addEventListener('click', click);
 		function click(evt) {
-			handleClick(evt.clientX, evt.clientY);
+			handleClick(evt.offsetX, evt.offsetY);
 		}
 		function touchStart(evt) {
-			handleClick(evt.changedTouches[0].pageX, evt.changedTouches[0].pageY);
+			handleClick(evt.touches[0].offsetX, evt.touches[0].offsetY);
 		}
 		function handleClick(x, y) {
 			if(!numbers.handleClick(x, y)){
