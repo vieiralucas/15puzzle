@@ -1,267 +1,317 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-	<meta charset="UTF-8">
-	<title>15 Puzzle</title>
-	<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <meta charset="UTF-8">
+  <title>15 Puzzle</title>
+  <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
 </head>
-<body>	
-<canvas id="15-puzzle"></canvas>
-<script>
-	window.onload = function() {
-		var W = window.innerHeight/2, H = W;
-		var canvas = document.getElementById('15-puzzle');
-		var ctx = canvas.getContext('2d');
-		var frames, time;
-		canvas.width = W;
-		canvas.height = H;
-		var tileWidth = W/4, tileHeight = H/5;
-		ctx.font = tileHeight/2 + 'px Helvetica';
-		var gameOver, rights;
 
-		function Tile(i, j, w, h, v) {
-			this.i = i;
-			this.j = j;
-			this.x = i * w;
-			this.y = j * h;
-			this.w = w;
-			this.h = h;
-			this.v = v;
-			this.rightTiles = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 0]];
-		}
-		Tile.prototype.change = function(i, j) {
-			this.i = i;
-			this.j = j;
-			this.x = i * this.w;
-			this.y = j * this.h;
-		}
-		Tile.prototype.contains = function(x, y) {
-			return x > this.x && x < this.x + this.w && y > this.y && y < this.y + this.h;
-		};
-		Tile.prototype.draw = function() {
-			if(this.v !== 0) {
-				ctx.strokeStyle = "#F0F";
-				var tile, width, height, posX, posY;
-				width = ctx.measureText(this.v).width;
-				height = this.h/2;
-				posX = this.x + (this.w - width)/2;
-				posY = this.y + this.h - (height/2);
-				var fillStyle;
-				if(this.isRight()) {
-					fillStyle = "#0F0";
-					rights++;
-				}else {
-					fillStyle = "#FFF";
-				}
-				ctx.fillStyle = fillStyle;
-				ctx.fillText(this.v, posX, posY);
-				ctx.beginPath();
-				ctx.rect(this.x, this.y, this.w, this.h);
-				ctx.stroke();
-			} else {
-				ctx.fillStyle = "#876";
-				ctx.fillRect(this.x, this.y, this.w, this.h);
-			}
-		};
-		Tile.prototype.isRight = function() {
-			return this.v === this.rightTiles[this.j][this.i];
-		};
+<body>
+  <canvas id="15-puzzle"></canvas>
+  <script>
+  window.onload = function() {
+    var W = window.innerHeight / 2,
+      H = W;
+    var canvas = document.getElementById('15-puzzle');
+    var ctx = canvas.getContext('2d');
+    var frames, time;
+    canvas.width = W;
+    canvas.height = H;
+    var tileWidth = W / 4,
+      tileHeight = H / 5;
+    ctx.font = tileHeight / 2 + 'px Helvetica';
+    var gameOver, rights;
 
-		var numbers = {
-			tilesObjects: [],
-			tiles: [[15, 14, 13, 12], [11, 10, 9, 8], [7, 6, 5, 4], [3, 1, 2, 0]],
-			rightTiles: [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 0]],
-			init: function() {
-				for (var i = 0; i < 4; i++) {
-					var aux = [];
-					for (var j = 0; j < 4; j++) {
-						aux.push(new Tile(i, j, tileWidth, tileHeight, this.tiles[j][i]))
-					}
-					this.tilesObjects.push(aux);
-				}
-			},
-			reset: function() {
-				this.tilesObjects = [];
-				this.init();
-			},
-			draw: function() {
-				for (var i = 0; i < this.tilesObjects.length; i++) {
-					for (var j = 0; j < this.tilesObjects[0].length; j++) {
-						this.tilesObjects[i][j].draw();
-					}
-				}
-			},
-			handleClick: function(x, y) {
-				for (var i = 0; i < this.tilesObjects.length; i++) {
-					for (var j = 0; j < this.tilesObjects[0].length; j++) {
-						var tile = this.tilesObjects[i][j];
-						if(this.tilesObjects[i][j].contains(x, y)) {
-							if(i + 1 < this.tilesObjects.length) {
-								if(this.tilesObjects[i + 1][j].v === 0) {
-									//troca com direita
-									//troca os i's j's
-									var aux = {
-										i: this.tilesObjects[i][j].i, 
-										j: this.tilesObjects[i][j].j
-									};
-									this.tilesObjects[i][j].change(this.tilesObjects[i + 1][j].i, this.tilesObjects[i + 1][j].j);
-									this.tilesObjects[i + 1][j].change(aux.i, aux.j);
-									//troca no array localizado em numbers
-									aux = this.tilesObjects[i][j];
-									this.tilesObjects[i][j] = this.tilesObjects[i + 1][j];
-									this.tilesObjects[i + 1][j] = aux;
-									return true;
-								}
-							}
-							if(i - 1 >= 0 ) {
-								if(this.tilesObjects[i - 1][j].v === 0) {
-									//troca com de esquerda
-									var aux = {
-										i: this.tilesObjects[i][j].i, 
-										j: this.tilesObjects[i][j].j
-									};
-									this.tilesObjects[i][j].change(this.tilesObjects[i - 1][j].i, this.tilesObjects[i - 1][j].j);
-									this.tilesObjects[i - 1][j].change(aux.i, aux.j);
-									//troca no array localizado em numbers
-									aux = this.tilesObjects[i][j];
-									this.tilesObjects[i][j] = this.tilesObjects[i - 1][j];
-									this.tilesObjects[i - 1][j] = aux;
-									return true;
-								}
-							}
-							if(j + 1 < this.tilesObjects[0].length) {
-								if(this.tilesObjects[i][j + 1].v === 0) {
-									//troca com baixo
-									var aux = {
-										i: this.tilesObjects[i][j].i, 
-										j: this.tilesObjects[i][j].j
-									};
-									this.tilesObjects[i][j].change(this.tilesObjects[i][j + 1].i, this.tilesObjects[i][j + 1].j);
-									this.tilesObjects[i][j + 1].change(aux.i, aux.j);
-									//troca no array localizado em numbers
-									aux = this.tilesObjects[i][j];
-									this.tilesObjects[i][j] = this.tilesObjects[i][j + 1];
-									this.tilesObjects[i][j + 1] = aux;
-									return true;
-								}
-							}
-							if(j - 1 >= 0) {
-								if(this.tilesObjects[i][j - 1].v === 0) {
-									//troca com cima
-									var aux = {
-										i: this.tilesObjects[i][j].i, 
-										j: this.tilesObjects[i][j].j
-									};
-									this.tilesObjects[i][j].change(this.tilesObjects[i][j - 1].i, this.tilesObjects[i][j - 1].j);
-									this.tilesObjects[i][j - 1].change(aux.i, aux.j);
-									//troca no array localizado em numbers
-									aux = this.tilesObjects[i][j];
-									this.tilesObjects[i][j] = this.tilesObjects[i][j - 1];
-									this.tilesObjects[i][j - 1] = aux;
-									return true;
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-		var restartBox = {
-			x: 0,
-			y: tileHeight * 4,
-			w: tileWidth * 2.5,
-			h: tileHeight,
-			contains: function(x, y) {
-				return x > this.x && x < this.x + this.w && y > this.y && y < this.y + this.h;
-			}
-		}
+    function Tile(i, j, w, h, v) {
+      this.i = i;
+      this.j = j;
+      this.x = i * w;
+      this.y = j * h;
+      this.w = w;
+      this.h = h;
+      this.v = v;
+      this.rightTiles = [
+        [1, 2, 3, 4],
+        [5, 6, 7, 8],
+        [9, 10, 11, 12],
+        [13, 14, 15, 0]
+      ];
+    }
+    Tile.prototype.change = function(i, j) {
+      this.i = i;
+      this.j = j;
+      this.x = i * this.w;
+      this.y = j * this.h;
+    }
+    Tile.prototype.contains = function(x, y) {
+      return x > this.x && x < this.x + this.w && y > this.y && y < this.y + this.h;
+    };
+    Tile.prototype.draw = function() {
+      if (this.v !== 0) {
+        ctx.strokeStyle = "#F0F";
+        var tile, width, height, posX, posY;
+        width = ctx.measureText(this.v).width;
+        height = this.h / 2;
+        posX = this.x + (this.w - width) / 2;
+        posY = this.y + this.h - (height / 2);
+        var fillStyle;
+        if (this.isRight()) {
+          fillStyle = "#0F0";
+          rights++;
+        } else {
+          fillStyle = "#FFF";
+        }
+        ctx.fillStyle = fillStyle;
+        ctx.fillText(this.v, posX, posY);
+        ctx.beginPath();
+        ctx.rect(this.x, this.y, this.w, this.h);
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = "#876";
+        ctx.fillRect(this.x, this.y, this.w, this.h);
+      }
+    };
+    Tile.prototype.isRight = function() {
+      return this.v === this.rightTiles[this.j][this.i];
+    };
 
-		function init() {
-			gameOver = false;
-			rights = 0;
-			numbers.init();
-			frames = 0, time = 0;
-			run();
-		}
-		function run() {
-			update();
-			draw();
-			window.requestAnimationFrame(run, canvas);
-		}
-		function update() {
-			if(rights === 15) {
-				gameOver = true;
-			}
-			frames++;
-			if(frames % 60 === 0) {
-				if(time < 999){
-					gameOver ? time = time : time++;
-				}
-			}
-			rights = 0;
-		}
-		function draw() {
-			drawBackground();
-			numbers.draw();
-		}
-		function drawBackground() {
-			ctx.fillStyle = "#000";
-			ctx.fillRect(0, 0, W, H);
-			ctx.fillStyle = "#AAA";
-			ctx.fillRect(0, tileHeight * 4, tileWidth*4, tileHeight);
-			drawRestart();
-			drawTime();
-		}
-		function drawRestart() {
-			ctx.strokeStyle = "#FFF";
-			ctx.beginPath();
-			ctx.rect(0, tileHeight * 4, tileWidth * 2.5, tileHeight);
-			ctx.stroke();
-			var text = "RESTART";
-			var width = ctx.measureText(text).width;
-			var height = tileHeight/2;
-			var textX = (tileWidth * 2.5 - width)/2;
-			var textY = tileHeight * 5 - (height/2);
-			ctx.fillStyle = "#000";
-			ctx.fillText(text, textX, textY);
-		}
-		function drawTime() {
-			ctx.strokeStyle = "#FFF";
-			ctx.beginPath();
-			ctx.rect(tileWidth * 2.5, tileHeight * 4, tileWidth * 1.5, tileHeight);
-			ctx.stroke();
-			var width = ctx.measureText(time).width;
-			var height = tileHeight/2;
-			var textX = tileWidth * 2.5 + (tileWidth * 1.5 - width)/2;
-			var textY = tileHeight * 5 - (height/2);
-			var style;
-			gameOver ? style = "#F00" : "#000"; 
-			ctx.fillStyle = style;
-			ctx.fillText(time, textX, textY);	
-		}
-		init();
-		canvas.addEventListener('touchstart', touchStart);
-		canvas.addEventListener('click', click);
-		function click(evt) {
-			handleClick(evt.offsetX, evt.offsetY);
-		}
-		function touchStart(evt) {
-			handleClick(evt.touches[0].offsetX, evt.touches[0].offsetY);
-		}
-		function handleClick(x, y) {
-			if(!numbers.handleClick(x, y)){
-				if(restartBox.contains(x, y)) {
-					restart();
-				}
-			}
-		}
-		function restart() {
-			gameOver = false;
-			frames = 0;
-			time = 0;
-			numbers.reset();
-		}
-	}
-</script>
+    var numbers = {
+      tilesObjects: [],
+      tiles: [
+        [15, 14, 13, 12],
+        [11, 10, 9, 8],
+        [7, 6, 5, 4],
+        [3, 1, 2, 0]
+      ],
+      rightTiles: [
+        [1, 2, 3, 4],
+        [5, 6, 7, 8],
+        [9, 10, 11, 12],
+        [13, 14, 15, 0]
+      ],
+      init: function() {
+        for (var i = 0; i < 4; i++) {
+          var aux = [];
+          for (var j = 0; j < 4; j++) {
+            aux.push(new Tile(i, j, tileWidth, tileHeight, this.tiles[j][i]))
+          }
+          this.tilesObjects.push(aux);
+        }
+      },
+      reset: function() {
+        this.tilesObjects = [];
+        this.init();
+      },
+      draw: function() {
+        for (var i = 0; i < this.tilesObjects.length; i++) {
+          for (var j = 0; j < this.tilesObjects[0].length; j++) {
+            this.tilesObjects[i][j].draw();
+          }
+        }
+      },
+      handleClick: function(x, y) {
+        for (var i = 0; i < this.tilesObjects.length; i++) {
+          for (var j = 0; j < this.tilesObjects[0].length; j++) {
+            var tile = this.tilesObjects[i][j];
+            if (this.tilesObjects[i][j].contains(x, y)) {
+              if (i + 1 < this.tilesObjects.length) {
+                if (this.tilesObjects[i + 1][j].v === 0) {
+                  //troca com direita
+                  //troca os i's j's
+                  var aux = {
+                    i: this.tilesObjects[i][j].i,
+                    j: this.tilesObjects[i][j].j
+                  };
+                  this.tilesObjects[i][j].change(this.tilesObjects[i + 1][j].i, this.tilesObjects[i + 1][j].j);
+                  this.tilesObjects[i + 1][j].change(aux.i, aux.j);
+                  //troca no array localizado em numbers
+                  aux = this.tilesObjects[i][j];
+                  this.tilesObjects[i][j] = this.tilesObjects[i + 1][j];
+                  this.tilesObjects[i + 1][j] = aux;
+                  return true;
+                }
+              }
+              if (i - 1 >= 0) {
+                if (this.tilesObjects[i - 1][j].v === 0) {
+                  //troca com de esquerda
+                  var aux = {
+                    i: this.tilesObjects[i][j].i,
+                    j: this.tilesObjects[i][j].j
+                  };
+                  this.tilesObjects[i][j].change(this.tilesObjects[i - 1][j].i, this.tilesObjects[i - 1][j].j);
+                  this.tilesObjects[i - 1][j].change(aux.i, aux.j);
+                  //troca no array localizado em numbers
+                  aux = this.tilesObjects[i][j];
+                  this.tilesObjects[i][j] = this.tilesObjects[i - 1][j];
+                  this.tilesObjects[i - 1][j] = aux;
+                  return true;
+                }
+              }
+              if (j + 1 < this.tilesObjects[0].length) {
+                if (this.tilesObjects[i][j + 1].v === 0) {
+                  //troca com baixo
+                  var aux = {
+                    i: this.tilesObjects[i][j].i,
+                    j: this.tilesObjects[i][j].j
+                  };
+                  this.tilesObjects[i][j].change(this.tilesObjects[i][j + 1].i, this.tilesObjects[i][j + 1].j);
+                  this.tilesObjects[i][j + 1].change(aux.i, aux.j);
+                  //troca no array localizado em numbers
+                  aux = this.tilesObjects[i][j];
+                  this.tilesObjects[i][j] = this.tilesObjects[i][j + 1];
+                  this.tilesObjects[i][j + 1] = aux;
+                  return true;
+                }
+              }
+              if (j - 1 >= 0) {
+                if (this.tilesObjects[i][j - 1].v === 0) {
+                  //troca com cima
+                  var aux = {
+                    i: this.tilesObjects[i][j].i,
+                    j: this.tilesObjects[i][j].j
+                  };
+                  this.tilesObjects[i][j].change(this.tilesObjects[i][j - 1].i, this.tilesObjects[i][j - 1].j);
+                  this.tilesObjects[i][j - 1].change(aux.i, aux.j);
+                  //troca no array localizado em numbers
+                  aux = this.tilesObjects[i][j];
+                  this.tilesObjects[i][j] = this.tilesObjects[i][j - 1];
+                  this.tilesObjects[i][j - 1] = aux;
+                  return true;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    var restartBox = {
+      x: 0,
+      y: tileHeight * 4,
+      w: tileWidth * 2.5,
+      h: tileHeight,
+      contains: function(x, y) {
+        return x > this.x && x < this.x + this.w && y > this.y && y < this.y + this.h;
+      }
+    }
+
+    function init() {
+      gameOver = false;
+      rights = 0;
+      numbers.init();
+      frames = 0, time = 0;
+      run();
+    }
+
+    function run() {
+      update();
+      draw();
+      window.requestAnimationFrame(run, canvas);
+    }
+
+    function update() {
+      if (rights === 15) {
+        gameOver = true;
+      }
+      frames++;
+      if (frames % 60 === 0) {
+        if (time < 999) {
+          gameOver ? time = time : time++;
+        }
+      }
+      rights = 0;
+    }
+
+    function draw() {
+      drawBackground();
+      numbers.draw();
+    }
+
+    function drawBackground() {
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#AAA";
+      ctx.fillRect(0, tileHeight * 4, tileWidth * 4, tileHeight);
+      drawRestart();
+      drawTime();
+    }
+
+    function drawRestart() {
+      ctx.strokeStyle = "#FFF";
+      ctx.beginPath();
+      ctx.rect(0, tileHeight * 4, tileWidth * 2.5, tileHeight);
+      ctx.stroke();
+      var text = "RESTART";
+      var width = ctx.measureText(text).width;
+      var height = tileHeight / 2;
+      var textX = (tileWidth * 2.5 - width) / 2;
+      var textY = tileHeight * 5 - (height / 2);
+      ctx.fillStyle = "#000";
+      ctx.fillText(text, textX, textY);
+    }
+
+    function drawTime() {
+      ctx.strokeStyle = "#FFF";
+      ctx.beginPath();
+      ctx.rect(tileWidth * 2.5, tileHeight * 4, tileWidth * 1.5, tileHeight);
+      ctx.stroke();
+      var width = ctx.measureText(time).width;
+      var height = tileHeight / 2;
+      var textX = tileWidth * 2.5 + (tileWidth * 1.5 - width) / 2;
+      var textY = tileHeight * 5 - (height / 2);
+      var style;
+      gameOver ? style = "#F00" : "#000";
+      ctx.fillStyle = style;
+      ctx.fillText(time, textX, textY);
+    }
+    init();
+    canvas.addEventListener('touchstart', touchStart);
+    canvas.addEventListener('click', click);
+
+    function click(evt) {
+      var pos = getPosition(evt);
+      handleClick(pos.x, pos.y);
+    }
+
+    function touchStart(evt) {
+      handleClick(evt.touches[0].offsetX, evt.touches[0].offsetY);
+    }
+
+    function handleClick(x, y) {
+      if (!numbers.handleClick(x, y)) {
+        if (restartBox.contains(x, y)) {
+          restart();
+        }
+      }
+    }
+
+    function getPosition(evt) {
+      if (evt.offsetY && evt.offsetY) {
+        return {
+          x: evt.offsetX,
+          y: evt.offsetY
+        };
+      }
+
+      var x = evt.pageX;
+      var y = evt.pageY;
+      x -= canvas.offsetLeft;
+      y -= canvas.offsetTop;
+
+      return {
+        x: x,
+        y: y
+      };
+    }
+
+    function restart() {
+      gameOver = false;
+      frames = 0;
+      time = 0;
+      numbers.reset();
+    }
+  }
+  </script>
 </body>
+
 </html>
