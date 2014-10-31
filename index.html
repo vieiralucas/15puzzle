@@ -5,9 +5,25 @@
   <meta charset="UTF-8">
   <title>15 Puzzle</title>
   <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <style>
+    body {
+      font-size: 20px;
+      background: #DEDEDE;
+    }
+    canvas {
+      margin: auto;
+      position: absolute;
+      left: 0;
+      right: 0;
+    }
+    h2 {
+      text-align: center;
+    }
+  </style>
 </head>
 
 <body>
+  <h2>Click on the square you want to move</h2>
   <canvas id="15-puzzle"></canvas>
   <script>
   window.onload = function() {
